@@ -1,6 +1,6 @@
 config={'annotation': 'Example annotation',
  'mode': '2d',
- 'combine_asymptotic_limits_json':'/home/iihe/NetBeansProjects/4Top/EFT_mancini_preaproval2.0/SL_OS_SS_combined_blind.json',
+ 'combine_asymptotic_limits_json':'SL_OS_SS_combined_blind.json',
     'C0C1':{
         "xmin":-2.14,
         "xmax":2.14,

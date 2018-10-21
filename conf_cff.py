@@ -1,6 +1,6 @@
 config={'annotation': 'Example annotation',
  'mode': 'jinja-test',
- 'combine_asymptotic_limits_json':'/home/iihe/NetBeansProjects/4Top/EFT_mancini_preaproval2.0/SL_OS_SS_combined_blind.json',
+ 'combine_asymptotic_limits_json':'SL_OS_SS_combined_blind.json',
     'tables':{
         'independent':{
             'latex_main':'build/table_independent.tex',
