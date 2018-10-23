@@ -44,6 +44,10 @@ from mg_calculations import wilson_coefficients, MG_SM_13TeV, sig_SM_13TeV, MG_S
 eft13 = EftPredictions(wilson_coefficients, MG_SM_13TeV, sig_SM_13TeV)
 eft14 = EftPredictions(wilson_coefficients, MG_SM_14TeV, sig_SM_14TeV)
 tttt_xs_14_to_13_ratio = eft13.gen_eft_xs([C_OR,C_OL1,C_OL8,C_B1,CB8])/eft14.gen_eft_xs([C_OR,C_OL1,C_OL8,C_B1,CB8])
+
+# test
+eft13.gen_eft_xs([0.,0.,0.,0.,0.]) # should give 9.201
+eft14.gen_eft_xs([0.,0.,0.,0.,0.]) # should give 11.31723
 ```
 
 -------------------------------------
