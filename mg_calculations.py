@@ -5,7 +5,6 @@ sig_SM_13TeV = 0.009201 * 1000. # fb
 #RT gg 14/13 TeV parton lumi ratio (https://twiki.cern.ch/twiki/bin/view/LHCPhysics/CERNYellowReportPageAt1314TeV2014#Parton_luminosity_ratio)
 #            1.227607773
 sig_SM_14TeV = sig_SM_13TeV*1.23 # fb
-sig_SM=sig_SM_13TeV
 
 # Predefined values of Wilson coefs. for which the EFT tttt cross section was calculated.
 # One has to make sure that resulting matrix for sigma_i and sigma_ij is not degenerate
@@ -38,4 +37,6 @@ MG_SM_13TeV = [0.01557, 0.01564, 0.0102, 0.01116, 0.01022, 0.02873, 0.0203, 0.01
 
 MG_SM_14TeV = [0.02087, 0.02087, 0.0133, 0.01464, 0.01323, 0.0389, 0.02744, 0.02276, 0.0206, 0.02768, 0.0225, 0.02341, 0.02088, 0.01782, 0.0247, 0.01604, 0.02874, 0.03798, 0.02641, 0.03234]  # pb
 
+##############################################
+sig_SM=sig_SM_13TeV
 MG_SM=MG_SM_13TeV
