@@ -15,8 +15,10 @@ def main():
     eft = EftPredictions(wilson_coefficients, MG_SM, sig_SM)
 
     #Plots with limit contours
-    make_plot1d(eft.S)
+    #make_plot1d(eft.S)
     make_plot2d(eft.S)
+
+    print eft.S
 
 def C0(C0,s):
         '''
@@ -30,7 +32,7 @@ def C0(C0,s):
                 (c[0]**2.)*s[5], (c[1]**2.)*s[6], (c[2]**2.)*s[7], (c[3]**2.)*s[8], (c[4]**2.)*s[9], 
                 2.*c[0]*c[1]*s[10], 2.*c[0]*c[2]*s[11], 2.*c[0]*c[3]*s[12], 2.*c[0]*c[4]*s[13], 
                 2.*c[1]*c[2]*s[14], 2.*c[1]*c[3]*s[15], 2.*c[1]*c[4]*s[16], 
-                2.*c[2]*c[3]*s[17], 2.*c[2]*c[4]*s[17], 
+                2.*c[2]*c[3]*s[17], 2.*c[2]*c[4]*s[18], 
                 2.*c[3]*c[4]*s[19]]
         return sum(row)
 
@@ -46,7 +48,22 @@ def C0C1(C0,C1,s):
                 (c[0]**2.)*s[5], (c[1]**2.)*s[6], (c[2]**2.)*s[7], (c[3]**2.)*s[8], (c[4]**2.)*s[9], 
                 2.*c[0]*c[1]*s[10], 2.*c[0]*c[2]*s[11], 2.*c[0]*c[3]*s[12], 2.*c[0]*c[4]*s[13], 
                 2.*c[1]*c[2]*s[14], 2.*c[1]*c[3]*s[15], 2.*c[1]*c[4]*s[16], 
-                2.*c[2]*c[3]*s[17], 2.*c[2]*c[4]*s[17], 
+                2.*c[2]*c[3]*s[17], 2.*c[2]*c[4]*s[18], 
+                2.*c[3]*c[4]*s[19]]
+        return sum(row)
+
+def C1C2(C1,C2,s):
+        '''
+        Calculations of the tttt EFT cross section based on just two operators C1, C2
+        :param s:
+        :return: sigma_tttt = sigma_tttt_SM + sum_i C_i*sigma_i + sum_ij C_i*C_j*sigma_ij, where i,j = 0,1
+        '''
+        c = [0.,C1,C2,0.,0.]
+        row = [ sig_SM, c[0]*s[0], c[1]*s[1], c[2]*s[2], c[3]*s[3], c[4]*s[4], 
+                (c[0]**2.)*s[5], (c[1]**2.)*s[6], (c[2]**2.)*s[7], (c[3]**2.)*s[8], (c[4]**2.)*s[9], 
+                2.*c[0]*c[1]*s[10], 2.*c[0]*c[2]*s[11], 2.*c[0]*c[3]*s[12], 2.*c[0]*c[4]*s[13], 
+                2.*c[1]*c[2]*s[14], 2.*c[1]*c[3]*s[15], 2.*c[1]*c[4]*s[16], 
+                2.*c[2]*c[3]*s[17], 2.*c[2]*c[4]*s[18], 
                 2.*c[3]*c[4]*s[19]]
         return sum(row)
 
@@ -118,29 +135,35 @@ def make_plot1d(sigma):
         plt.show()
 
 def make_plot2d(sigma):
-        xlist = np.linspace(-3.0, 3.0, num=120)
-        ylist = np.linspace(-3.0, 3.0, num=120)
+        xlist = np.linspace(-30.0, 30.0, num=120)
+        ylist = np.linspace(-30.0, 30.0, num=120)
         X, Y = np.meshgrid(xlist, ylist)
-        f = np.vectorize( C0C1, excluded=set([2]))
+        f = np.vectorize( C1C2, excluded=set([2]))
         Z = f(X,Y,sigma)
 
         plt.rc('text', usetex=True)
         plt.rcParams.update({'font.size': 20})
-        plt.figure()
-        levels = [10.0, 20., 30., 40., 50., 70.]
+        fig, ax = plt.subplots()
+        #levels = [10.0, 20., 30., 40., 50., 70.]
+        levels = [10.0, 70., 200.]
         contour = plt.contour(X, Y, Z, levels, colors='k')
         plt.clabel(contour, colors = 'k', fmt = '%2.1f', fontsize=12)
-        level_2015 = [6.4*sig_SM] 
-        level_2016_sl = [2.7*sig_SM] 
-        contour_2015 = plt.contour(X, Y, Z, level_2015, colors='r',linewidths=np.arange(3.9, 4, .5),linestyles='dashed')
-        plt.clabel(contour_2015, colors = 'r', fmt = '2015', fontsize=12)
-        contour_2016sl = plt.contour(X, Y, Z, level_2016_sl, colors='r',linewidths=np.arange(3.9, 4, .5))
-        plt.clabel(contour_2016sl, colors = 'r', fmt = '2016', fontsize=12)
-        contour_filled = plt.contourf(X, Y, Z, 100)
-        plt.colorbar(contour_filled)
+        #level_expected = [2.0*sig_SM] 
+        #level_expectedUnc = [1.3*sig_SM,3.0*sig_SM] 
+        #contour_expected = plt.contour(X, Y, Z, level_expected, colors='r',linewidths=np.arange(3.9, 4, .5),linestyles='dashed')
+        #plt.clabel(contour_expected, colors = 'r', fontsize=12)
+        #contour_2016sl = plt.contour(X, Y, Z, level_expectedUnc, colors='r',linewidths=np.arange(3.9, 4, .5))
+        #plt.clabel(contour_2016sl, colors = 'r', fontsize=12)
+        contour_filled = plt.contourf(X, Y, Z, 100,cmap='RdYlBu')
+        color_bar = plt.colorbar(contour_filled)
+        color_bar.set_label('$\\sigma_{{ t\\bar{{t}}t\\bar{{t}} }}$ (fb)')
+        cbytick_obj = plt.getp(color_bar.ax.axes, 'yticklabels')                #tricky
+        plt.setp(cbytick_obj)
         plt.title('')
-        plt.xlabel(r'$O_{R}$')
-        plt.ylabel(r'$O_{L}^{(1)}$')
+        #plt.xlabel(r'$O_{R}$')
+        plt.xlabel(r'$C_{O_{L}^{(1)}}$')
+        plt.ylabel(r'$C_{O_{L}^{(8)}}$')
+
         plt.show()
     
 if __name__ == "__main__":
