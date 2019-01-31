@@ -185,38 +185,54 @@ class Model(object):
                 if name in self._marginal_limits:
                         return self._marginal_limits[name]
                 else:
-                        k = self._eft.name_index_map[name]
                         excluded_indices = [ self._eft.name_index_map[op_name] for op_name in excluded_operators ]
+                        k = self._eft.name_index_map[name]
                         
                         self._marginal_limits[name] = None
 
                         Ak_mat = self._eft.Sigma2_matr.copy()
                         Zk_vec = -self._eft.Sigma2_matr.copy()[:,k]
                         Ck_vec = -self._eft.Sigma1_vec.copy()
-
+                        eliminatedSigma2_matr = self._eft.Sigma2_matr.copy()
+                        eliminatedSigma1_vec  = self._eft.Sigma1_vec.copy()
+                        print '#'*50
+                        print Ak_mat
+                        print Zk_vec
+                        print Ck_vec
+                        print '*'*50
                         # Remove excluded directions
                         for i in range(self._eft.N_wilsons):
                                 if i in excluded_indices: 
-                                        Zk_vec[i] = 0
-                                        Ck_vec[i] = 0
-                                for j in range(self._eft.N_wilsons):
-                                        if i in excluded_indices and j in excluded_indices: Ak_mat[i,j] = 0
-
+                                        eliminatedSigma2_matr = np.delete(eliminatedSigma2_matr, (i), axis=0)
+                                        eliminatedSigma2_matr = np.delete(eliminatedSigma2_matr, (i), axis=1)
+                                        eliminatedSigma1_vec  = np.delete(eliminatedSigma1_vec, (i), axis=0)
+                                        Ak_mat = np.delete(Ak_mat, (i), axis=0)
+                                        Ak_mat = np.delete(Ak_mat, (i), axis=1)
+                                        Zk_vec = np.delete(Zk_vec, (i), axis=0)
+                                        Ck_vec = np.delete(Ck_vec, (i), axis=0)
+                                        if k > i: k-=1
+                        print Ak_mat
+                        print Zk_vec
+                        print Ck_vec
+                        print '-'*50
                         # Calculate projections of tangent planes
-                        for i in range(self._eft.N_wilsons):
-                                for j in range(self._eft.N_wilsons):
+                        for i in range(self._eft.N_wilsons - len(excluded_indices)):
+                                for j in range(self._eft.N_wilsons - len(excluded_indices)):
                                         if i == k: Ak_mat[i,j] = 0
                                         if j == k: Ak_mat[i,j] = 0
                         Ak_mat[k,k]=1
                         Zk_vec[k]=1
                         Ck_vec[k]=0
+                        print Ak_mat
+                        print Zk_vec
+                        print Ck_vec
                         Dk_vec = np.linalg.inv(Ak_mat).dot(Zk_vec)
                         Ek_vec = np.linalg.inv(Ak_mat).dot(Ck_vec)
-                        p2 = self._eft.Sigma2_matr.copy()[k,:].dot(Dk_vec)
-                        p1 = self._eft.Sigma2_matr.copy()[k,:].dot(Ek_vec) + self._eft.Sigma1_vec.copy().dot(Dk_vec) + self._eft.Sigma1_vec[k]
-                        p0 = self._eft.Sigma1_vec.copy().dot(Ek_vec)+sig_SM
+                        p2 = eliminatedSigma2_matr[k,:].dot(Dk_vec)
+                        p1 = eliminatedSigma2_matr[k,:].dot(Ek_vec) + eliminatedSigma1_vec.dot(Dk_vec) + eliminatedSigma1_vec[k]
+                        p0 = eliminatedSigma1_vec.dot(Ek_vec)+sig_SM
 
-                        expected_interval = np.roots([p2,p1,p0 - self._combine_limits['exp_50.0']*sig_SM])
+                        expected_interval      = np.roots([p2,p1,p0 - self._combine_limits['exp_50.0']*sig_SM])
                         expected_68up_interval = np.roots([p2,p1,p0 - self._combine_limits['exp_84.0']*sig_SM])
                         expected_95up_interval = np.roots([p2,p1,p0 - self._combine_limits['exp_97.5']*sig_SM])
                         observed_interval      = np.roots([p2,p1,p0 - self._combine_limits['obs']*sig_SM])
