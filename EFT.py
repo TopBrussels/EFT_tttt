@@ -162,33 +162,47 @@ class Model(object):
                         expected_95up_coefs[-1] = expected_95up_coefs[-1] - self._combine_limits['exp_97.5']*sig_SM
                         expected_95up_interval = np.roots(expected_95up_coefs)
                         logging.info("Independent Expected 95% Up limits for {}: {}".format(name, expected_95up_interval))
-                        # expected_68down_coefs = coefs[:]
-                        # expected_68down_coefs[-1] = expected_68down_coefs[-1] - self._combine_limits['exp_16.0']*sig_SM
-                        # expected_68down_interval = np.roots(expected_68down_coefs)
+                        observed_coefs = coefs[:]
+                        observed_coefs[-1] = observed_coefs[-1] - self._combine_limits['obs']*sig_SM
+                        observed_interval = np.roots(observed_coefs)
                         # logging.info("Independent Expected 68% Down limits for {}: {}".format(name, expected_68down_interval))
 
                         self._independent_limits[name] = Limit( exp_min=round(expected_interval[0],1),exp_max=round(expected_interval[1],1),
                                                                 exp_min68=round(expected_68up_interval[0],1),exp_max68=round(expected_68up_interval[1],1),
-                                                                exp_min95=round(expected_95up_interval[0],1),exp_max95=round(expected_95up_interval[1],1)
-                        )
+                                                                exp_min95=round(expected_95up_interval[0],1),exp_max95=round(expected_95up_interval[1],1),
+                                                                obs_min=round(observed_interval[0],1),obs_max=round(observed_interval[1],1))
 
                 return self._independent_limits[name]
 
-        def get_marginal_limit(self,name):
+        def get_marginal_limit(self,name,excluded_operators=None):
                 from mg_calculations import sig_SM
                 # compute marginalized projections
                 # see http://www.am.ub.edu/~robert/Documents/quadric.pdf
+
+                if excluded_operators is not None and name in excluded_operators:
+                        raise RuntimeError("Requested operator {} is in the list of excluded:{}".format(name,excluded_operators))
 
                 if name in self._marginal_limits:
                         return self._marginal_limits[name]
                 else:
                         k = self._eft.name_index_map[name]
+                        excluded_indices = [ self._eft.name_index_map[op_name] for op_name in excluded_operators ]
                         
                         self._marginal_limits[name] = None
 
                         Ak_mat = self._eft.Sigma2_matr.copy()
                         Zk_vec = -self._eft.Sigma2_matr.copy()[:,k]
                         Ck_vec = -self._eft.Sigma1_vec.copy()
+
+                        # Remove excluded directions
+                        for i in range(self._eft.N_wilsons):
+                                if i in excluded_indices: 
+                                        Zk_vec[i] = 0
+                                        Ck_vec[i] = 0
+                                for j in range(self._eft.N_wilsons):
+                                        if i in excluded_indices and j in excluded_indices: Ak_mat[i,j] = 0
+
+                        # Calculate projections of tangent planes
                         for i in range(self._eft.N_wilsons):
                                 for j in range(self._eft.N_wilsons):
                                         if i == k: Ak_mat[i,j] = 0
@@ -205,11 +219,11 @@ class Model(object):
                         expected_interval = np.roots([p2,p1,p0 - self._combine_limits['exp_50.0']*sig_SM])
                         expected_68up_interval = np.roots([p2,p1,p0 - self._combine_limits['exp_84.0']*sig_SM])
                         expected_95up_interval = np.roots([p2,p1,p0 - self._combine_limits['exp_97.5']*sig_SM])
-
+                        observed_interval      = np.roots([p2,p1,p0 - self._combine_limits['obs']*sig_SM])
                         self._marginal_limits[name] = Limit( exp_min=round(expected_interval[0],1),exp_max=round(expected_interval[1],1),
                                                                 exp_min68=round(expected_68up_interval[0],1),exp_max68=round(expected_68up_interval[1],1),
-                                                                exp_min95=round(expected_95up_interval[0],1),exp_max95=round(expected_95up_interval[1],1)
-                        )
+                                                                exp_min95=round(expected_95up_interval[0],1),exp_max95=round(expected_95up_interval[1],1),
+                                                                obs_min=round(observed_interval[0],1),obs_max=round(observed_interval[1],1))
 
                 return self._marginal_limits[name]
 
@@ -405,7 +419,7 @@ class LatexLimitsTables(View):
                                 if 'independent' in tab_name:
                                         limit = self.model.get_independent_limit(operator)
                                 elif 'marginal' in tab_name:
-                                        limit = self.model.get_marginal_limit(operator)
+                                        limit = self.model.get_marginal_limit(operator,excluded_operators=['O_L^8'])
                                 else: 
                                         limit = self.model.get(operator)
                                 limits[operator] = limit
