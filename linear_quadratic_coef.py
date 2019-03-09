@@ -80,6 +80,7 @@ class Model(object):
         def __init__(self,configuration):
                 self._configuration = configuration
                 self._sigma_hat = {}
+                self._sigma_hat_ij = {}
                 self._annotation = 'Performance comparision of different MVA discriminants'
                 if 'annotation' in self._configuration:
                         self._annotation = self._configuration['annotation']
@@ -112,6 +113,28 @@ class Model(object):
                         else: raise RuntimeError("Operator {} is not available".format(bcolors.BOLD+operator+bcolors.ENDC))
                 return self._sigma_hat[operator]
 
+        @log_with()
+        def get_quadratic_coefficient(self, pair_of_operators):
+                """
+                Factory method
+                """
+                if len(pair_of_operators) != 2:
+                        raise RuntimeError("Operator pair {} must have two entries".format(bcolors.BOLD+operator+bcolors.ENDC))
+                op1, op1_ind     = pair_of_operators[0], self._eft.name_index_map.get(pair_of_operators[0],None)
+                op2, op2_ind     = pair_of_operators[1], self._eft.name_index_map.get(pair_of_operators[1],None)
+                if op1_ind is None or op2_ind is None:
+                        raise RuntimeError("Operator {} or {} not found".format(bcolors.BOLD+op1+bcolors.ENDC, 
+                                                                                bcolors.BOLD+op2+bcolors.ENDC))
+
+                if op1 in self._sigma_hat_ij and op2 in self._sigma_hat_ij[op1]: return self._sigma_hat_ij[op1][op2]
+                else: 
+                        if op1 not in self._sigma_hat_ij: 
+                                # print "1st case: ", op1,  self._sigma_hat_ij
+                                self._sigma_hat_ij[op1]={op2:self._eft.Sigma2_matr[op1_ind][op2_ind]}
+                        else: 
+                                self._sigma_hat_ij[op1][op2]=self._eft.Sigma2_matr[op1_ind][op2_ind]
+
+                return self._sigma_hat_ij[op1][op2]
 
 class Serializer(object):
         @log_with()
@@ -265,35 +288,42 @@ class LatexReportView(View):
                 self.Init()
 		View.draw(self)
                 print self.model._configuration
+                tables_templates = {}
                 for tab_name, tab_config in self.model._configuration['tables'].iteritems():
                         sigmas = {}
-                        for operator in tab_config['operators']:
-                                sigma_hat = None
+                        for entry in tab_config['operators']:
+                                sigma_hat_i = None
+                                sigma_hat_ij = None
                                 if 'linear' in tab_name:
-                                        sigma_hat = self.model.get_linear_coefficient(operator)
+                                        sigma_hat_i = self.model.get_linear_coefficient(entry)
+                                        sigmas[entry] = round(sigma_hat_i,2)
                                 elif 'quadratic' in tab_name:
-                                        raise RuntimeError("Table {} is not supported. Terminating!".format(bcolors.BOLD+tab_name+bcolors.ENDC))
-                                        # sigma_hat = self.model.get_linear_coefficient(operator)
+                                        # raise RuntimeError("Table {} is not supported. Terminating!".format(bcolors.BOLD+tab_name+bcolors.ENDC))
+                                        sigma_hat_ij = self.model.get_quadratic_coefficient(entry)
+                                        if entry[0] not in sigmas: sigmas[entry[0]] = {entry[1]:round(sigma_hat_ij,2)}
+                                        else: sigmas[entry[0]][entry[1]] = round(sigma_hat_ij,2)
                                 else: 
                                         raise RuntimeError("Table name {} is not recognized. Terminating!".format(bcolors.BOLD+tab_name+bcolors.ENDC))
-                                # save rounded values to the table
-                                sigmas[operator] = round(sigma_hat,2)
                         
                         # Render and save table
                         self.tab_template = self.latex_jinja_env.get_template(tab_config['template'])
+                        print sigmas
                         table_template = self.tab_template.render(sigma_hat=sigmas)
                         # determine output .tex file name by removing path and .jinja2 suffix
                         with open(tab_config['latex_main'], "w") as f:  # saves tex_code to outpout file
                                 f.write(table_template)
+                        tables_templates[tab_name] = table_template
 
-                        # Render and save report
-                        self.rep_template = self.latex_jinja_env.get_template(self.model._configuration['latex_main_template'])
-                        print table_template
-                        report_template = self.rep_template.render(table_linear=table_template)
+                # Render and save report
+                self.rep_template = self.latex_jinja_env.get_template(self.model._configuration['latex_main_template'])
+                for tab_name, tab_config in self.model._configuration['tables'].iteritems():
+                        logging.debug(tables_templates[tab_name])
+                        report_template = self.rep_template.render(abstract=self.model._annotation,**tables_templates)
                         # determine output .tex file name by removing path and .jinja2 suffix
                         report_file_name = self.model._configuration['latex_main_template'].split('/')[-1].replace('.jinja2','')
                         with open("build/"+report_file_name, "w") as f:  # saves tex_code to outpout file
                                 f.write(report_template)
+                #build pdf file
                 subprocess.call(["pdflatex", "-interaction=nonstopmode", "-output-directory={}".format(self._outputfolder),
                                  "build/"+report_file_name])
 		

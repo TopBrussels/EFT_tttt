@@ -5,11 +5,11 @@
       \begin{tabular}{ c  c  c  c  c  c } 
         Operator     & $O_R$                    & $O_L^{(1)}$ & $O_L^{(8)}$ &  $O_B^{(1)}$ & $O_B^{(8)}$ \\
         \hline
-        $O_R$        & \VAR{sigma_hat['O_R']['O_R']} & . & . & . & . \\
-        $O_L^{(1)}$  & . & \VAR{sigma_hat['O_L^1']['O_L^1']} & . & . & . \\
-        $O_L^{(8)}$  & . & . & \VAR{sigma_hat['O_L^8']['O_L^8']} & . & . \\
-        $O_B^{(1)}$  & . & . & . & \VAR{sigma_hat['O_B^1']['O_B^1']} & . \\
-        $O_B^{(8)}$  & . & . & . & . & \VAR{sigma_hat['O_B^8']['O_B^8']} \\
+        $O_R$        & \VAR{sigma_hat['O_R']['O_R']}   & \VAR{sigma_hat['O_R']['O_L^1']}   & \VAR{sigma_hat['O_R']['O_L^8']}   & \VAR{sigma_hat['O_R']['O_B^1']}   & \VAR{sigma_hat['O_R']['O_B^8']} \\
+        $O_L^{(1)}$  & \VAR{sigma_hat['O_L^1']['O_R']} & \VAR{sigma_hat['O_L^1']['O_L^1']} & \VAR{sigma_hat['O_L^1']['O_L^8']} & \VAR{sigma_hat['O_L^1']['O_B^1']} & \VAR{sigma_hat['O_L^1']['O_B^8']} \\
+        $O_L^{(8)}$  & \VAR{sigma_hat['O_L^8']['O_R']} & \VAR{sigma_hat['O_L^8']['O_L^1']} & \VAR{sigma_hat['O_L^8']['O_L^8']} & \VAR{sigma_hat['O_L^8']['O_B^1']} & \VAR{sigma_hat['O_L^8']['O_B^8']} \\
+        $O_B^{(1)}$  & \VAR{sigma_hat['O_B^1']['O_R']} & \VAR{sigma_hat['O_B^1']['O_L^1']} & \VAR{sigma_hat['O_B^1']['O_L^8']} & \VAR{sigma_hat['O_B^1']['O_B^1']} & \VAR{sigma_hat['O_B^1']['O_B^8']} \\
+        $O_B^{(8)}$  & \VAR{sigma_hat['O_B^8']['O_R']} & \VAR{sigma_hat['O_B^8']['O_L^1']} & \VAR{sigma_hat['O_B^8']['O_L^8']} & \VAR{sigma_hat['O_B^8']['O_B^1']} & \VAR{sigma_hat['O_B^8']['O_B^8']} \\
        \hline
       \end{tabular}
     \end{center}
